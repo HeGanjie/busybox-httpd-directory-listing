@@ -10,6 +10,15 @@ function doGET(url, callback) {
 	xhr.send();
 }
 function isFolder(name) { return name.charAt(name.length - 1) === '/'; }
+function comparePath(a1, a2) {
+	var f1 = isFolder(a1)
+	var f2 = isFolder(a2)
+	if (f1 !== f2) {
+		if (f1) return -1;
+		if (f2) return 1;
+	}
+	return a1.localeCompare(a2);
+}
 
 function onFolderClick(a) {
 	var folderName = a.text;
@@ -26,6 +35,7 @@ function initPage(dirPath) {
 		document.body.innerHTML = '';
 		('../\n' + res).split('\n')
 		.filter(function (a) { return a != ''; })
+		.sort(comparePath)
 		.forEach(function (val, i) {
 			var div = document.createElement("div");
 			div.innerHTML = isFolder(val)
