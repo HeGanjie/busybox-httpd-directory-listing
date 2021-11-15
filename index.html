@@ -9,15 +9,23 @@ function doGET(url, callback) {
 	xhr.onload = function () { callback(xhr.response); };
 	xhr.send();
 }
-function isFolder(name) { return !name.match(/.+\.\w+/); }
-function completePathname(origin) { return origin[origin.length - 1] == '/' ? origin : origin + '/'; }
+function isFolder(name) { return name.charAt(name.length - 1) === '/'; }
+function comparePath(a1, a2) {
+	var f1 = isFolder(a1)
+	var f2 = isFolder(a2)
+	if (f1 !== f2) {
+		if (f1) return -1;
+		if (f2) return 1;
+	}
+	return a1.localeCompare(a2);
+}
 
 function onFolderClick(a) {
 	var folderName = a.text;
-	if (folderName == '..') {
+	if (folderName == '../') {
 		history.back();
 	} else {
-		var path = completePathname(location.pathname) + folderName;
+		var path = location.pathname + folderName;
 		history.pushState(null, null, path);
 		initPage(path);
 	}
@@ -25,13 +33,14 @@ function onFolderClick(a) {
 function initPage(dirPath) {
 	doGET('/cgi-bin/main.cgi' + dirPath, function (res) {
 		document.body.innerHTML = '';
-		res.split('\n')
-		.filter(function (a) { return a != '' && a != '.'; })
+		('../\n' + res).split('\n')
+		.filter(function (a) { return a != ''; })
+		.sort(comparePath)
 		.forEach(function (val, i) {
 			var div = document.createElement("div");
 			div.innerHTML = isFolder(val)
 				? "<a href='javascript:void(0)' onclick='onFolderClick(this)'>" + val + "</a>"
-				: "<a href='" + completePathname(dirPath) + val + "' target='_blank'>" + val + "</a>";
+				: "<a href='" + dirPath + val + "' target='_blank'>" + val + "</a>";
 			document.body.appendChild(div);
 		});
 	});
